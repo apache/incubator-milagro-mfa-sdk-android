@@ -82,10 +82,10 @@ static jobject nMakeNewUser(JNIEnv* env, jobject jobj, jlong jptr, jstring jid, 
 	return env->NewObject(clsUser, ctorUser, (jlong) new MPinSDK::UserPtr(user));
 }
 
-static jobject nStartRegistration(JNIEnv* env, jobject jobj, jlong jptr, jobject juser, jstring juserData)
+static jobject nStartRegistration(JNIEnv* env, jobject jobj, jlong jptr, jobject juser, jstring jactivateCode, jstring juserData)
 {
 	MPinSDK* sdk = (MPinSDK*) jptr;
-	return MakeJavaStatus(env, sdk->StartRegistration(JavaToMPinUser(env, juser), JavaToStdString(env, juserData)));
+	return MakeJavaStatus(env, sdk->StartRegistration(JavaToMPinUser(env, juser), JavaToStdString(env, jactivateCode), JavaToStdString(env, juserData)));
 }
 
 static jobject nRestartRegistration(JNIEnv* env, jobject jobj, jlong jptr, jobject juser, jstring juserData)
@@ -94,11 +94,11 @@ static jobject nRestartRegistration(JNIEnv* env, jobject jobj, jlong jptr, jobje
 	return MakeJavaStatus(env, sdk->RestartRegistration(JavaToMPinUser(env, juser), JavaToStdString(env, juserData)));
 }
 
-static jobject nVerifyUser(JNIEnv* env, jobject jobj, jlong jptr, jobject juser, jstring jmpinId, jstring jactivationKey)
-{
-	MPinSDK* sdk = (MPinSDK*) jptr;
-	return MakeJavaStatus(env, sdk->VerifyUser(JavaToMPinUser(env, juser), JavaToStdString(env, jmpinId), JavaToStdString(env, jactivationKey)));
-}
+//static jobject nVerifyUser(JNIEnv* env, jobject jobj, jlong jptr, jobject juser, jstring jmpinId, jstring jactivationKey)
+//{
+//	MPinSDK* sdk = (MPinSDK*) jptr;
+//	return MakeJavaStatus(env, sdk->VerifyUser(JavaToMPinUser(env, juser), JavaToStdString(env, jmpinId), JavaToStdString(env, jactivationKey)));
+//}
 
 static jobject nConfirmRegistration(JNIEnv* env, jobject jobj, jlong jptr, jobject juser, jstring jpushMessageIdentifier)
 {
@@ -238,9 +238,8 @@ static JNINativeMethod g_methodsMPinSDK[] =
 	NATIVE_METHOD(nSetBackend, "(JLjava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nSetBackendRPS, "(JLjava/lang/String;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nMakeNewUser, "(JLjava/lang/String;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/User;"),
-	NATIVE_METHOD(nStartRegistration, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
+	NATIVE_METHOD(nStartRegistration, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nRestartRegistration, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
-	NATIVE_METHOD(nVerifyUser, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nConfirmRegistration, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nFinishRegistration, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nStartAuthentication, "(JLcom/miracl/mpinsdk/model/User;)Lcom/miracl/mpinsdk/model/Status;"),
