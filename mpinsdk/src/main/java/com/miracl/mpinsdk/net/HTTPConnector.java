@@ -22,11 +22,13 @@ package com.miracl.mpinsdk.net;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -137,7 +139,9 @@ public class HTTPConnector implements IHTTPRequest {
 
             if (!TextUtils.isEmpty(requestBody)) {
                 dos = new DataOutputStream(connection.getOutputStream());
-                dos.writeBytes(requestBody);
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(dos, "UTF-8"));
+                writer.write(requestBody);
+                writer.close();
             }
 
             // Starts the query
