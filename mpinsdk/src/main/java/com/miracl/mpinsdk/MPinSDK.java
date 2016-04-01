@@ -117,6 +117,10 @@ public class MPinSDK implements Closeable {
         return nStartAuthentication(mPtr, user);
     }
 
+    public Status StartAuthentication(User user, String accessCode) {
+        return nStartAuthenticationAccessCode(mPtr, user, accessCode);
+    }
+
     public Status CheckAccessNumber(String accessNumber) {
         return nCheckAccessNumber(mPtr, accessNumber);
     }
@@ -137,12 +141,24 @@ public class MPinSDK implements Closeable {
         return nFinishAuthenticationAN(mPtr, user, pin, accessNumber);
     }
 
+    public String GetPrerollUserId(String accessCode) {
+        return nGetPrerollUserId(mPtr, accessCode);
+    }
+
     public void DeleteUser(User user) {
         nDeleteUser(mPtr, user);
     }
 
-    public void ListUsers(List<User> users) {
-        nListUsers(mPtr, users);
+    public Status ListUsers(List<User> users) {
+        return nListUsers(mPtr, users);
+    }
+
+    public Status ListUsers(List<User> users, String backend) {
+        return nListUsersForBackend(mPtr, users, backend);
+    }
+
+    public Status ListBackends(List<String> backends) {
+        return nListBackends(mPtr, backends);
     }
 
     public String GetVersion() {
@@ -187,6 +203,8 @@ public class MPinSDK implements Closeable {
 
     private native Status nStartAuthentication(long ptr, User user);
 
+    private native Status nStartAuthenticationAccessCode(long ptr, User user, String accessCode);
+
     private native Status nCheckAccessNumber(long ptr, String accessNumber);
 
     private native Status nFinishAuthentication(long ptr, User user, String pin);
@@ -197,9 +215,15 @@ public class MPinSDK implements Closeable {
 
     private native Status nFinishAuthenticationAN(long ptr, User user, String pin, String accessNumber);
 
+    private native String nGetPrerollUserId(long ptr, String key);
+
     private native void nDeleteUser(long ptr, User user);
 
-    private native void nListUsers(long ptr, List<User> users);
+    private native Status nListUsers(long ptr, List<User> users);
+
+    private native Status nListUsersForBackend(long ptr, List<User> users, String backend);
+
+    private native Status nListBackends(long ptr, List<String> backends);
 
     private native String nGetVersion(long ptr);
 

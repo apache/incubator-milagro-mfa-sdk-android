@@ -118,6 +118,12 @@ static jobject nStartAuthentication(JNIEnv* env, jobject jobj, jlong jptr, jobje
 	return MakeJavaStatus(env, sdk->StartAuthentication(JavaToMPinUser(env, juser)));
 }
 
+static jobject nStartAuthenticationAccessCode(JNIEnv* env, jobject jobj, jlong jptr, jobject juser, jstring accessCode)
+{
+    MPinSDK* sdk = (MPinSDK*) jptr;
+    return MakeJavaStatus(env, sdk->StartAuthentication(JavaToMPinUser(env, juser),JavaToStdString(env,accessCode)));
+}
+
 static jobject nCheckAccessNumber(JNIEnv* env, jobject jobj, jlong jptr, jstring jaccessNumber)
 {
 	MPinSDK* sdk = (MPinSDK*) jptr;
@@ -177,29 +183,85 @@ static jobject nFinishAuthenticationAN(JNIEnv* env, jobject jobj, jlong jptr, jo
 	return MakeJavaStatus(env, sdk->FinishAuthenticationAN(JavaToMPinUser(env, juser), JavaToStdString(env, jpin), JavaToStdString(env, jaccessNumber)));
 }
 
+static jstring nGetPrerollUserId(JNIEnv* env, jobject jobj, jlong jptr, jstring jaccessCode)
+{
+    MPinSDK* sdk = (MPinSDK*) jptr;
+    MPinSDK::String result = sdk->GetPrerollUserId(JavaToStdString(env, jaccessCode));
+    return env->NewStringUTF(result.c_str());
+}
+
 static void nDeleteUser(JNIEnv* env, jobject jobj, jlong jptr, jobject juser)
 {
 	MPinSDK* sdk = (MPinSDK*) jptr;
 	sdk->DeleteUser(JavaToMPinUser(env, juser));
 }
 
-static void nListUsers(JNIEnv* env, jobject jobj, jlong jptr, jobject jusersList)
+static jobject nListUsers(JNIEnv* env, jobject jobj, jlong jptr, jobject jusersList)
 {
 	MPinSDK* sdk = (MPinSDK*) jptr;
 	std::vector<MPinSDK::UserPtr> users;
-	sdk->ListUsers(users);
+	MPinSDK::Status status = sdk->ListUsers(users);
 
-	jclass clsList = env->FindClass("java/util/List");
-	jmethodID midAdd = env->GetMethodID(clsList, "add", "(Ljava/lang/Object;)Z");
+    if(status == MPinSDK::Status::OK)
+    {
+        jclass clsList = env->FindClass("java/util/List");
+        jmethodID midAdd = env->GetMethodID(clsList, "add", "(Ljava/lang/Object;)Z");
 
-	jclass clsUser = env->FindClass("com/miracl/mpinsdk/model/User");
-	jmethodID ctorUser = env->GetMethodID(clsUser, "<init>", "(J)V");
+        jclass clsUser = env->FindClass("com/miracl/mpinsdk/model/User");
+        jmethodID ctorUser = env->GetMethodID(clsUser, "<init>", "(J)V");
 
-	for (std::vector<MPinSDK::UserPtr>::iterator i = users.begin(); i != users.end(); ++i) {
-		MPinSDK::UserPtr user = *i;
-		jobject juser = env->NewObject(clsUser, ctorUser, (jlong) new MPinSDK::UserPtr(user));
-		env->CallBooleanMethod(jusersList, midAdd, juser);
-	}
+        for (std::vector<MPinSDK::UserPtr>::iterator i = users.begin(); i != users.end(); ++i) {
+            MPinSDK::UserPtr user = *i;
+            jobject juser = env->NewObject(clsUser, ctorUser, (jlong) new MPinSDK::UserPtr(user));
+            env->CallBooleanMethod(jusersList, midAdd, juser);
+        }
+    }
+
+    return MakeJavaStatus(env,status);
+}
+
+static jobject nListUsersForBackend(JNIEnv* env, jobject jobj, jlong jptr, jobject jusersList, jstring jbackend)
+{
+    MPinSDK* sdk = (MPinSDK*) jptr;
+    std::vector<MPinSDK::UserPtr> users;
+    MPinSDK::Status status = sdk->ListUsers(users,JavaToStdString(env,jbackend));
+
+    if(status == MPinSDK::Status::OK)
+    {
+        jclass clsList = env->FindClass("java/util/List");
+        jmethodID midAdd = env->GetMethodID(clsList, "add", "(Ljava/lang/Object;)Z");
+
+        jclass clsUser = env->FindClass("com/miracl/mpinsdk/model/User");
+        jmethodID ctorUser = env->GetMethodID(clsUser, "<init>", "(J)V");
+
+        for (std::vector<MPinSDK::UserPtr>::iterator i = users.begin(); i != users.end(); ++i) {
+            MPinSDK::UserPtr user = *i;
+            jobject juser = env->NewObject(clsUser, ctorUser, (jlong) new MPinSDK::UserPtr(user));
+            env->CallBooleanMethod(jusersList, midAdd, juser);
+        }
+    }
+
+    return MakeJavaStatus(env,status);
+}
+
+static jobject nListBackends(JNIEnv* env, jobject jobj, jlong jptr,jobject jBackendsList)
+{
+    MPinSDK* sdk = (MPinSDK*) jptr;
+    std::vector<MPinSDK::String> backends;
+    MPinSDK::Status status = sdk->ListBackends(backends);
+
+    if(status == MPinSDK::Status::OK)
+    {
+        jclass clsList = env->FindClass("java/util/List");
+        jmethodID midAdd = env->GetMethodID(clsList, "add", "(Ljava/lang/Object;)Z");
+
+        for (std::vector<MPinSDK::String>::iterator i = backends.begin(); i != backends.end(); ++i) {
+            MPinSDK::String backend = *i;
+            env->CallBooleanMethod(jBackendsList, midAdd, env->NewStringUTF(backend.c_str()));
+        }
+    }
+
+    return MakeJavaStatus(env,status);
 }
 
 static jstring nGetVersion(JNIEnv* env, jobject jobj, jlong jptr)
@@ -243,13 +305,17 @@ static JNINativeMethod g_methodsMPinSDK[] =
 	NATIVE_METHOD(nConfirmRegistration, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nFinishRegistration, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nStartAuthentication, "(JLcom/miracl/mpinsdk/model/User;)Lcom/miracl/mpinsdk/model/Status;"),
+    NATIVE_METHOD(nStartAuthenticationAccessCode, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nCheckAccessNumber, "(JLjava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nFinishAuthentication, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nFinishAuthenticationResultData, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;Ljava/lang/StringBuilder;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nFinishAuthenticationOTP, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;Lcom/miracl/mpinsdk/model/OTP;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nFinishAuthenticationAN, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nDeleteUser, "(JLcom/miracl/mpinsdk/model/User;)V"),
-	NATIVE_METHOD(nListUsers, "(JLjava/util/List;)V"),
+    NATIVE_METHOD(nGetPrerollUserId, "(JLjava/lang/String;)Ljava/lang/String;"),
+	NATIVE_METHOD(nListUsers, "(JLjava/util/List;)Lcom/miracl/mpinsdk/model/Status;"),
+    NATIVE_METHOD(nListUsersForBackend, "(JLjava/util/List;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
+    NATIVE_METHOD(nListBackends, "(JLjava/util/List;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nGetVersion, "(J)Ljava/lang/String;"),
 	NATIVE_METHOD(nCanLogout, "(JLcom/miracl/mpinsdk/model/User;)Z"),
 	NATIVE_METHOD(nLogout, "(JLcom/miracl/mpinsdk/model/User;)Z"),
