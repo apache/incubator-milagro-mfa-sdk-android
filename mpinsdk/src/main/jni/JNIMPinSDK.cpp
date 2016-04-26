@@ -183,17 +183,36 @@ static jobject nFinishAuthenticationAN(JNIEnv* env, jobject jobj, jlong jptr, jo
 	return MakeJavaStatus(env, sdk->FinishAuthenticationAN(JavaToMPinUser(env, juser), JavaToStdString(env, jpin), JavaToStdString(env, jaccessNumber)));
 }
 
-static jstring nGetPrerollUserId(JNIEnv* env, jobject jobj, jlong jptr, jstring jaccessCode)
-{
+static jobject nGetSessionDetails(JNIEnv* env, jobject jobj, jlong jptr, jstring jaccessCode, jobject jsessionDetails){
     MPinSDK* sdk = (MPinSDK*) jptr;
-    MPinSDK::String result = sdk->GetPrerollUserId(JavaToStdString(env, jaccessCode));
-    return env->NewStringUTF(result.c_str());
+    MPinSDK::SessionDetails sessionDetails;
+
+    MPinSDK::Status status = sdk->GetSessionDetails(JavaToStdString(env,jaccessCode), sessionDetails);
+
+    if(status == MPinSDK::Status::OK)
+   	{
+   		jclass clsSessionDetails = env->FindClass("com/miracl/mpinsdk/model/SessionDetails");
+   		jfieldID fIdPrerollId = env->GetFieldID(clsSessionDetails, "prerollId", "Ljava/lang/String;");
+   		jfieldID fIdAppName = env->GetFieldID(clsSessionDetails, "appName", "Ljava/lang/String;");
+   		jfieldID fIdAppIconUrl = env->GetFieldID(clsSessionDetails, "appIconUrl", "Ljava/lang/String;");
+
+   		env->SetObjectField(jsessionDetails, fIdPrerollId, env->NewStringUTF(sessionDetails.prerollId.c_str()));
+   		env->SetObjectField(jsessionDetails, fIdAppName, env->NewStringUTF(sessionDetails.appName.c_str()));
+   		env->SetObjectField(jsessionDetails, fIdAppIconUrl, env->NewStringUTF(sessionDetails.appIconUrl.c_str()));
+   	}
+
+    return MakeJavaStatus(env, status);
 }
 
 static void nDeleteUser(JNIEnv* env, jobject jobj, jlong jptr, jobject juser)
 {
 	MPinSDK* sdk = (MPinSDK*) jptr;
 	sdk->DeleteUser(JavaToMPinUser(env, juser));
+}
+
+static void nDeleteUserForBackend(JNIEnv* env, jobject jobj, jlong jptr, jobject juser, jstring jbackend){
+    MPinSDK* sdk = (MPinSDK*) jptr;
+    sdk->DeleteUser(JavaToMPinUser(env, juser), JavaToStdString(env, jbackend));
 }
 
 static jobject nListUsers(JNIEnv* env, jobject jobj, jlong jptr, jobject jusersList)
@@ -312,7 +331,8 @@ static JNINativeMethod g_methodsMPinSDK[] =
 	NATIVE_METHOD(nFinishAuthenticationOTP, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;Lcom/miracl/mpinsdk/model/OTP;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nFinishAuthenticationAN, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nDeleteUser, "(JLcom/miracl/mpinsdk/model/User;)V"),
-    NATIVE_METHOD(nGetPrerollUserId, "(JLjava/lang/String;)Ljava/lang/String;"),
+	NATIVE_METHOD(nDeleteUserForBackend, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;)V"),
+	NATIVE_METHOD(nGetSessionDetails, "(JLjava/lang/String;Lcom/miracl/mpinsdk/model/SessionDetails;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nListUsers, "(JLjava/util/List;)Lcom/miracl/mpinsdk/model/Status;"),
     NATIVE_METHOD(nListUsersForBackend, "(JLjava/util/List;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
     NATIVE_METHOD(nListBackends, "(JLjava/util/List;)Lcom/miracl/mpinsdk/model/Status;"),
