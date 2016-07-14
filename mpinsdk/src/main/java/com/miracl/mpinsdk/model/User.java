@@ -24,22 +24,14 @@ import java.io.Closeable;
 
 public class User implements Closeable {
 
+    public enum State {
+        INVALID, STARTED_REGISTRATION, ACTIVATED, REGISTERED, BLOCKED
+    }
+
     private boolean isUserSelected;
 
     private long mPtr;
 
-
-    private User(long ptr) {
-        mPtr = ptr;
-    }
-
-    private native void nDestruct(long ptr);
-
-    private native String nGetId(long ptr);
-
-    private native int nGetState(long ptr);
-
-    ;
 
     public String getId() {
         return nGetId(mPtr);
@@ -60,6 +52,15 @@ public class User implements Closeable {
         }
     }
 
+    public boolean isUserSelected() {
+        return isUserSelected;
+    }
+
+    public void setUserSelected(boolean isUserSelected) {
+        this.isUserSelected = isUserSelected;
+    }
+
+
     @Override
     public void close() {
         synchronized (this) {
@@ -79,17 +80,16 @@ public class User implements Closeable {
         return getId();
     }
 
-    public boolean isUserSelected() {
-        return isUserSelected;
+
+    private User(long ptr) {
+        mPtr = ptr;
     }
 
-    public void setUserSelected(boolean isUserSelected) {
-        this.isUserSelected = isUserSelected;
-    }
+    private native void nDestruct(long ptr);
 
+    private native String nGetId(long ptr);
 
-    public enum State {
-        INVALID, STARTED_REGISTRATION, ACTIVATED, REGISTERED, BLOCKED
-    }
+    private native int nGetState(long ptr);
 
+    private native String nGetBackend(long ptr);
 }

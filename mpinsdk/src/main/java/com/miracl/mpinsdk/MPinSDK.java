@@ -58,6 +58,10 @@ public class MPinSDK implements Closeable {
         return nInit(mPtr, config, context);
     }
 
+    public Status Init(Map<String, String> config, Context context, Map<String, String> customHeaders) {
+        return nInitWithCustomHeaders(mPtr, config, context, customHeaders);
+    }
+
     public Status TestBackend(String server) {
         return nTestBackend(mPtr, server);
     }
@@ -150,12 +154,12 @@ public class MPinSDK implements Closeable {
         nDeleteUser(mPtr, user);
     }
 
-    public void DeleteUser(User user, String backend) {
-        nDeleteUserForBackend(mPtr, user, backend);
-    }
-
     public Status ListUsers(List<User> users) {
         return nListUsers(mPtr, users);
+    }
+
+    public Status ListAllUsers(List<User> users) {
+        return nListAllUsers(mPtr, users);
     }
 
     public Status ListUsers(List<User> users, String backend) {
@@ -187,6 +191,9 @@ public class MPinSDK implements Closeable {
     private native void nDestruct(long ptr);
 
     private native Status nInit(long ptr, Map<String, String> config, Context context);
+
+    private native Status nInitWithCustomHeaders(long ptr, Map<String, String> config, Context context,
+                                                 Map<String, String> customHeaders);
 
     private native Status nTestBackend(long ptr, String server);
 
@@ -224,9 +231,9 @@ public class MPinSDK implements Closeable {
 
     private native void nDeleteUser(long ptr, User user);
 
-    private native void nDeleteUserForBackend(long ptr, User user, String backend);
-
     private native Status nListUsers(long ptr, List<User> users);
+
+    private native Status nListAllUsers(long ptr, List<User> users);
 
     private native Status nListUsersForBackend(long ptr, List<User> users, String backend);
 
