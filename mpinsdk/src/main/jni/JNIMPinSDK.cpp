@@ -249,7 +249,7 @@ static jobject nListUsersForBackend(JNIEnv* env, jobject jobj, jlong jptr, jobje
 {
     MPinSDK* sdk = (MPinSDK*) jptr;
     	std::vector<MPinSDK::UserPtr> users;
-    	MPinSDK::Status status = sdk->ListAllUsers(users);
+    	MPinSDK::Status status = sdk->ListUsers(users, JavaToStdString(env, jbackend));
 
         if(status == MPinSDK::Status::OK)
         {

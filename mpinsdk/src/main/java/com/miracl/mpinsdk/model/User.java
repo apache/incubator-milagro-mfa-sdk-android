@@ -52,6 +52,10 @@ public class User implements Closeable {
         }
     }
 
+    public String getBackend() {
+        return nGetBackend(mPtr);
+    }
+
     public boolean isUserSelected() {
         return isUserSelected;
     }
