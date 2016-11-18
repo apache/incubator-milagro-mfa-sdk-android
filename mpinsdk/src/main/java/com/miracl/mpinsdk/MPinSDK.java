@@ -62,6 +62,11 @@ public class MPinSDK implements Closeable {
         return nInitWithCustomHeaders(mPtr, config, context, customHeaders);
     }
 
+    public void SetClientId(String clientId) {
+        nSetClientId(mPtr, clientId);
+    }
+
+
     public Status TestBackend(String server) {
         return nTestBackend(mPtr, server);
     }
@@ -146,6 +151,10 @@ public class MPinSDK implements Closeable {
         return nFinishAuthenticationAN(mPtr, user, pin, accessNumber);
     }
 
+    public Status FinishAuthenticationMFA(User user, String pin, StringBuilder authzCode) {
+        return nFinishAuthenticationMFA(mPtr, user, pin, authzCode);
+    }
+
     public Status GetSessionDetails(String accessCode, SessionDetails sessionDetails) {
         return nGetSessionDetails(mPtr, accessCode, sessionDetails);
     }
@@ -195,6 +204,8 @@ public class MPinSDK implements Closeable {
     private native Status nInitWithCustomHeaders(long ptr, Map<String, String> config, Context context,
                                                  Map<String, String> customHeaders);
 
+    private native void nSetClientId(long ptr, String clientId);
+
     private native Status nTestBackend(long ptr, String server);
 
     private native Status nTestBackendRPS(long ptr, String server, String rpsPrefix);
@@ -226,6 +237,8 @@ public class MPinSDK implements Closeable {
     private native Status nFinishAuthenticationOTP(long ptr, User user, String pin, OTP otp);
 
     private native Status nFinishAuthenticationAN(long ptr, User user, String pin, String accessNumber);
+
+    private native Status nFinishAuthenticationMFA(long ptr, User user, String pin, StringBuilder authzCode);
 
     private native Status nGetSessionDetails(long ptr, String accessCode, SessionDetails sessionDetails);
 

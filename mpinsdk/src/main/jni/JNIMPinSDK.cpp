@@ -66,6 +66,11 @@ static jobject nInitWithCustomHeaders(JNIEnv* env, jobject jobj, jlong jptr, job
 	return MakeJavaStatus(env, sdk->Init(config, Context::Instance(jcontext), customHeaders));
 }
 
+static void nSetClientId(JNIEnv* env, jobject jobj, jlong jptr, jstring jclientId){
+    MPinSDK* sdk = (MPinSDK*) jptr;
+    sdk->SetClientId(JavaToStdString(env, jclientId));
+}
+
 static jobject nTestBackend(JNIEnv* env, jobject jobj, jlong jptr, jstring jserver)
 {
 	MPinSDK* sdk = (MPinSDK*) jptr;
@@ -192,6 +197,20 @@ static jobject nFinishAuthenticationAN(JNIEnv* env, jobject jobj, jlong jptr, jo
 {
 	MPinSDK* sdk = (MPinSDK*) jptr;
 	return MakeJavaStatus(env, sdk->FinishAuthenticationAN(JavaToMPinUser(env, juser), JavaToStdString(env, jpin), JavaToStdString(env, jaccessNumber)));
+}
+
+static jobject nFinishAuthenticationMFA(JNIEnv* env, jobject jobj, jlong jptr, jobject juser, jstring jpin, jobject jauthzCode){
+    MPinSDK* sdk = (MPinSDK*) jptr;
+    MPinSDK::String authzCode;
+    MPinSDK::Status status = sdk->FinishAuthenticationMFA(JavaToMPinUser(env, juser), JavaToStdString(env, jpin), authzCode);
+
+    jclass clsStringBuilder = env->FindClass("java/lang/StringBuilder");
+    jmethodID midSetLength = env->GetMethodID(clsStringBuilder, "setLength", "(I)V");
+    env->CallVoidMethod(jauthzCode, midSetLength, authzCode.size());
+    jmethodID midReplace = env->GetMethodID(clsStringBuilder, "replace", "(IILjava/lang/String;)Ljava/lang/StringBuilder;");
+    env->CallObjectMethod(jauthzCode, midReplace, 0, authzCode.size(), env->NewStringUTF(authzCode.c_str()));
+
+    return MakeJavaStatus(env, status);
 }
 
 static jobject nGetSessionDetails(JNIEnv* env, jobject jobj, jlong jptr, jstring jaccessCode, jobject jsessionDetails){
@@ -345,6 +364,7 @@ static JNINativeMethod g_methodsMPinSDK[] =
 	NATIVE_METHOD(nDestruct, "(J)V"),
 	NATIVE_METHOD(nInit, "(JLjava/util/Map;Landroid/content/Context;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nInitWithCustomHeaders, "(JLjava/util/Map;Landroid/content/Context;Ljava/util/Map;)Lcom/miracl/mpinsdk/model/Status;"),
+	NATIVE_METHOD(nSetClientId, "(JLjava/lang/String;)V"),
 	NATIVE_METHOD(nTestBackend, "(JLjava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nTestBackendRPS, "(JLjava/lang/String;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nSetBackend, "(JLjava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
@@ -361,6 +381,7 @@ static JNINativeMethod g_methodsMPinSDK[] =
 	NATIVE_METHOD(nFinishAuthenticationResultData, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;Ljava/lang/StringBuilder;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nFinishAuthenticationOTP, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;Lcom/miracl/mpinsdk/model/OTP;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nFinishAuthenticationAN, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),
+	NATIVE_METHOD(nFinishAuthenticationMFA, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;Ljava/lang/StringBuilder;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nDeleteUser, "(JLcom/miracl/mpinsdk/model/User;)V"),
 	NATIVE_METHOD(nGetSessionDetails, "(JLjava/lang/String;Lcom/miracl/mpinsdk/model/SessionDetails;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nListUsers, "(JLjava/util/List;)Lcom/miracl/mpinsdk/model/Status;"),
