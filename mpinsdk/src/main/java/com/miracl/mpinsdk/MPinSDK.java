@@ -22,6 +22,7 @@ package com.miracl.mpinsdk;
 import android.content.Context;
 
 import com.miracl.mpinsdk.model.OTP;
+import com.miracl.mpinsdk.model.ServiceDetails;
 import com.miracl.mpinsdk.model.SessionDetails;
 import com.miracl.mpinsdk.model.Status;
 import com.miracl.mpinsdk.model.User;
@@ -159,6 +160,10 @@ public class MPinSDK implements Closeable {
         return nGetSessionDetails(mPtr, accessCode, sessionDetails);
     }
 
+    public Status GetServiceDetails(String url, ServiceDetails serviceDetails) {
+        return nGetServiceDetails(mPtr, url, serviceDetails);
+    }
+
     public void DeleteUser(User user) {
         nDeleteUser(mPtr, user);
     }
@@ -241,6 +246,8 @@ public class MPinSDK implements Closeable {
     private native Status nFinishAuthenticationMFA(long ptr, User user, String pin, StringBuilder authzCode);
 
     private native Status nGetSessionDetails(long ptr, String accessCode, SessionDetails sessionDetails);
+
+    private native Status nGetServiceDetails(long ptr, String url, ServiceDetails serviceDetails);
 
     private native void nDeleteUser(long ptr, User user);
 
