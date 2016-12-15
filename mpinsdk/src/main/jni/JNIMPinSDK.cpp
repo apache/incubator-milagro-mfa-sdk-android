@@ -234,6 +234,29 @@ static jobject nGetSessionDetails(JNIEnv* env, jobject jobj, jlong jptr, jstring
     return MakeJavaStatus(env, status);
 }
 
+static jobject nGetServiceDetails(JNIEnv* env, jobject jobj, jlong jptr, jstring jurl, jobject jserviceDetails){
+    MPinSDK* sdk = (MPinSDK*) jptr;
+    MPinSDK::ServiceDetails serviceDetails;
+
+    MPinSDK::Status status = sdk->GetServiceDetails(JavaToStdString(env, jurl), serviceDetails);
+
+    if(status == MPinSDK::Status::OK)
+   	{
+   		jclass clsServiceDetails = env->FindClass("com/miracl/mpinsdk/model/ServiceDetails");
+   		jfieldID fIdName = env->GetFieldID(clsServiceDetails, "name", "Ljava/lang/String;");
+   		jfieldID fIdBackendUrl = env->GetFieldID(clsServiceDetails, "backendUrl", "Ljava/lang/String;");
+   		jfieldID fIdRpsPrefix = env->GetFieldID(clsServiceDetails, "rpsPrefix", "Ljava/lang/String;");
+   		jfieldID fIdLogoUrl = env->GetFieldID(clsServiceDetails, "logoUrl", "Ljava/lang/String;");
+
+   		env->SetObjectField(jserviceDetails, fIdName, env->NewStringUTF(serviceDetails.name.c_str()));
+   		env->SetObjectField(jserviceDetails, fIdBackendUrl, env->NewStringUTF(serviceDetails.backendUrl.c_str()));
+   		env->SetObjectField(jserviceDetails, fIdRpsPrefix, env->NewStringUTF(serviceDetails.rpsPrefix.c_str()));
+   		env->SetObjectField(jserviceDetails, fIdLogoUrl, env->NewStringUTF(serviceDetails.logoUrl.c_str()));
+   	}
+
+    return MakeJavaStatus(env, status);
+}
+
 static void nDeleteUser(JNIEnv* env, jobject jobj, jlong jptr, jobject juser)
 {
 	MPinSDK* sdk = (MPinSDK*) jptr;
@@ -384,6 +407,7 @@ static JNINativeMethod g_methodsMPinSDK[] =
 	NATIVE_METHOD(nFinishAuthenticationMFA, "(JLcom/miracl/mpinsdk/model/User;Ljava/lang/String;Ljava/lang/StringBuilder;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nDeleteUser, "(JLcom/miracl/mpinsdk/model/User;)V"),
 	NATIVE_METHOD(nGetSessionDetails, "(JLjava/lang/String;Lcom/miracl/mpinsdk/model/SessionDetails;)Lcom/miracl/mpinsdk/model/Status;"),
+	NATIVE_METHOD(nGetServiceDetails, "(JLjava/lang/String;Lcom/miracl/mpinsdk/model/ServiceDetails;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nListUsers, "(JLjava/util/List;)Lcom/miracl/mpinsdk/model/Status;"),
 	NATIVE_METHOD(nListAllUsers, "(JLjava/util/List;)Lcom/miracl/mpinsdk/model/Status;"),
     NATIVE_METHOD(nListUsersForBackend, "(JLjava/util/List;Ljava/lang/String;)Lcom/miracl/mpinsdk/model/Status;"),

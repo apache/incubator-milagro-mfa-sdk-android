@@ -168,6 +168,25 @@ The method will return Status `OK` on success and `FLOW_ERROR` if the SDK was no
 This method will populate the provided list with all the backends known to the SDK.
 The method will return Status `OK` on success and `FLOW_ERROR` if the SDK was not initialized.
 
+##### `Status GetServiceDetails(String url, ServiceDetails serviceDetails)`
+This method is provided for applications working with the _MIRACL MFA Platform_.
+After scanning a QR Code from the platform login page, the app should extract the URL from it and call this method to retreive the service details.
+The service details include the _backend URL_ which needs to be set back to the SDK in order connect it to the platform.
+This method could be called even before the SDK has been initialized, or alternatively the SDK could be initialized without setting a backend, and `SetBackend()` could be used after the backend URL has been retreived through this method.
+The returned `ServiceDetails` look as follows:
+```java
+public class ServiceDetails {
+    public String name;
+    public String backendUrl;
+    public String rpsPrefix;
+    public String logoUrl;
+}
+ ```
+* `name` is the service readable name
+* `backendUrl` is the URL of the service backend. This URL has to be set either via the SDK `Init()` method or using  `SetBackend()`
+* `rpsPrefix` is RPS prefix setting which is also provided together with `backendUrl` while setting a backend
+* `logoUrl` is the URL of the service logo. The logo is a UI element that could be used by the app.
+
 ##### `Status GetSessionDetails(String accessCode, SessionDetails sessionDetails)`
 This method could be optionally used to retrieve details regarding a browser session when the SDK is used to authenticate users to an online service, such as the _MIRACL MFA Platform_.
 In this case an `accessCode` is transferred to the mobile device out-of-band e.g. via scanning a graphical code. The code is then provided to this method to get the session details.
